@@ -1,6 +1,7 @@
 [package]
 name = "playground"
 version = "0.0.0"
+authors = ["u7f8au7fbd <u7f8au7fbd@outlook.com>"]
 edition = "2021"
 
 [dependencies]
