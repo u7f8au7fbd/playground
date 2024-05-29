@@ -123,7 +123,7 @@ fn get_dom_size_from_html(document: &html::Html) -> bool {
 }
 
 // descriptionタグを取得して、その中身を表示し，その長さを表示する
-fn get_description_from_html(document: &html::Html) {
+fn get_description_from_html(document: &html::Html) -> i32 {
     let binding = scraper::Selector::parse("meta[name='description']").unwrap();
     let description_tag = document.select(&binding).next();
     if let Some(tag) = description_tag {
@@ -131,15 +131,20 @@ fn get_description_from_html(document: &html::Html) {
             println!("Description: {}", description);
             let description_length = description.chars().count();
             println!("Description Length: {}", description_length);
+            return description_length as i32;
         }
     } else {
         println!("Description tag not found");
+        return 0;
     }
+    0
 }
 
 //Titleとh1タグに異なるテキストを設定
-fn get_title_and_h1_text(document: &html::Html) {
+fn get_title_and_h1_text(document: &html::Html) -> bool {
     if search_and_get(document, "title") != search_and_get(document, "h1") {
         println!("タイトルとh1タグのテキストが異なります");
+        return true;
     }
+    false
 }
