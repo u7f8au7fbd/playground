@@ -1,0 +1,24 @@
+[package]
+name = "playground"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+#シリアライズ/デシリアライズ
+serde = { version = "*", features = ["derive"] }
+serde_json = { version = "*", futures = ["derive"] }
+#HTTPクライアント
+reqwest = { version = "*", features = ["cookies", "blocking", "http2"] }
+scraper = { version = "*" }
+url = { version = "*" }
+#非同期処理
+tokio = { version = "*", features = ["full"] }
+#現在時刻の取得
+chrono = { version = "*" }
+#GUI
+dioxus = { version = "*", features = ["desktop"] }
+
+[profile.dev]
+opt-level = 1
+[profile.dev.package."*"]
+opt-level = 3
