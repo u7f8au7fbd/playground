@@ -1,35 +1,13 @@
-use dioxus::prelude::*;
+#[macro_use]
+mod macros;
+use std::process::Command;
 
-fn main() {
-    dioxus::launch(App);
+fn setup() {
+    cmd!(clear); // clearコマンドを実行する
+    cmd!(utf - 8); // utf-8コマンドを実行する
+    cmd!(red_line); // lineコマンドを実行する
 }
 
-#[component]
-fn App() -> Element {
-    rsx! {
-        link { rel: "stylesheet", href: "main.css" }
-        div { id: "links",
-            table {
-                for i in 0..10 {
-                    div {
-                        a { href: "https://www.google.co.jp/search?q=Rust&start={i*10}",
-                            "Rust:{i*10}"
-                        }
-                    }
-                }
-            }
-        }
-        div { id: "tables",
-            //5x5のテーブルを描画
-            table {
-                for i in 1..=100 {
-                    tr {
-                        for j in 1..100 {
-                            td { "{i*j}" }
-                        }
-                    }
-                }
-            }
-        }
-    }
+fn main() {
+    setup();
 }
