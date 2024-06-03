@@ -24,11 +24,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "https://www.google.co.jp/search?q=Rust&start=80",
         "https://www.google.co.jp/search?q=Rust&start=90",
         ];
+        download_task(url_list).await?;
     Ok(())
 }
 
 async fn download_task<'a>(url_list: [&'a str; 10]) -> Result<(), Box<dyn std::error::Error + 'a>> {
-    let path = "./db/Google/".to_string();
+    let path = "./db/Data/".to_string();
     ini_dir!(&path);
     let mut tasks = Vec::new();
     //ダウンロードするためのタスクを生成
@@ -40,28 +41,26 @@ async fn download_task<'a>(url_list: [&'a str; 10]) -> Result<(), Box<dyn std::e
         });
         tasks.push(task);
     }
-    //ダウンロードするためのプライベート関数
-    async fn download(url: &str, path: &str, index: usize) {
-        let file_path = format!("{}{}.html", path, index);
-        ini_dir!(&file_path);
-        let command = Command::new("powershell")
-            .args([&format!(
-                "Invoke-WebRequest -Uri \"{}\" -OutFile \"{}\"",
-                url, file_path
-            )])
-            .output();
-
-        if command.unwrap().status.success() {
-            println!("{}{}{}", cmd_color!(green_b), index, cmd_color!(reset));
-        } else {
-            println!("{}{}{}", cmd_color!(red_b), index, cmd_color!(reset));
-        }
-    }
     //ダウンロードするためのタスクを実行
     for task in tasks {
         task.await?;
     }
-
     Ok(())
 }
 
+async fn download(url: &str, path: &str, index: usize) {
+    let file_path = format!("{}{}.html", path, index);
+    ini_dir!(&file_path);
+    let command = Command::new("powershell")
+        .args([&format!(
+            "Invoke-WebRequest -Uri \"{}\" -OutFile \"{}\"",
+            url, file_path
+        )])
+        .output();
+
+    if command.unwrap().status.success() {
+        println!("{}{}{}", cmd_color!(green_b), index, cmd_color!(reset));
+    } else {
+        println!("{}{}{}", cmd_color!(red_b), index, cmd_color!(reset));
+    }
+}
