@@ -57,7 +57,8 @@ macro_rules! cmd_color {
 
 #[macro_export]
 macro_rules! cmd {
-    (utf-8) => {
+    (utf8) => {
+        use std::process::Command;
         Command::new("cmd")
             .args(["/C", "chcp 65001"])
             .output()
@@ -111,4 +112,17 @@ macro_rules! format_path {
 #[macro_export]
 macro_rules! madogen {
     () => {};
+}
+
+#[macro_export]
+macro_rules! ini_dir {
+    ($path:expr) => {
+        use std::{fs,path};
+        let exists = path::Path::new($path).exists();
+        if exists {
+            fs::create_dir_all($path).expect("ディレクトリを作成できませんでした");
+        } else {
+            fs::remove_dir_all($path).expect("ディレクトリを削除できませんでした");
+        }
+    };
 }

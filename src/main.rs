@@ -1,27 +1,29 @@
-#[macro_use]
-mod macros;
 use std::process::Command;
 
+#[macro_use]
+mod macros;
+
 fn setup() {
-    cmd!(clear); // clearコマンドを実行する
-    cmd!(utf - 8); // utf-8コマンドを実行する
-    cmd!(red_line); // lineコマンドを実行する
+    cmd!(clear);
+    cmd!(utf8);
+    cmd!(line)
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup();
-    get_rnking("rust", 0);
+    let url_list = [
+        "https://www.google.co.jp/search?q=Rust&start=0",
+        "https://www.google.co.jp/search?q=Rust&start=10",
+        "https://www.google.co.jp/search?q=Rust&start=20",
+        "https://www.google.co.jp/search?q=Rust&start=30",
+        "https://www.google.co.jp/search?q=Rust&start=40",
+        "https://www.google.co.jp/search?q=Rust&start=50",
+        "https://www.google.co.jp/search?q=Rust&start=60",
+        "https://www.google.co.jp/search?q=Rust&start=70",
+        "https://www.google.co.jp/search?q=Rust&start=80",
+        "https://www.google.co.jp/search?q=Rust&start=90",
+        ];
+    Ok(())
 }
 
-fn format_query(query: &str) -> String {
-    query.replace(' ', "")
-}
-
-fn get_rnking(query: &str, page: i32) {
-    let query = format_query(query);
-    let url = format!("https://www.google.com/search?q={}&start={}", query, page);
-}
-
-fn print_query(query: &str) {
-    println!("検索クエリ: {}", query);
-}

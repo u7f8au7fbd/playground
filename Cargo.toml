@@ -9,7 +9,7 @@ edition = "2021"
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*", futures = ["derive"] }
 #HTTPクライアント
-reqwest = { version = "*", features = ["cookies", "blocking", "http2"] }
+reqwest = { version = "*", features = ["cookies", "blocking", "http2","json",] }
 scraper = { version = "*" }
 url = { version = "*" }
 #非同期処理
