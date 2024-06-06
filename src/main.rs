@@ -11,7 +11,7 @@ fn setup() {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup();
-    reqwest_dl("https://www.google.com/search?q=Rust&start=0","./db/test/test_ps.html").await?;
+    reqwest_dl("https://www.google.com/search?q=Rust&start=0","./db/test/test_rq.html").await?;
     powershell_dl("https://www.google.com/search?q=Rust&start=0","./db/test/test_ps.html").await?;
     Ok(())
 }
@@ -24,6 +24,16 @@ async fn reqwest_dl(url:&str,path:&str)->Result<(), Box<dyn std::error::Error>>{
 
 
 async fn powershell_dl(url: &str, path: &str)->Result<(), Box<dyn std::error::Error>>{
-
+    let output = Command::new("powershell")
+        .arg("-Command")
+        .arg(format!("Invoke-WebRequest -Uri {} -OutFile {}", url, path))
+        .output()?;
+    if !output.status.success() {
+        let error_message = String::from_utf8_lossy(&output.stderr);
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            error_message.trim(),
+        )));
+    }
     Ok(())
 }
