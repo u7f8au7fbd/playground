@@ -120,9 +120,10 @@ macro_rules! ini_dir {
         use std::{fs,path};
         let exists = path::Path::new($path).exists();
         if exists {
+            fs::remove_dir_all($path).expect("ディレクトリを削除できませんでした");
             fs::create_dir_all($path).expect("ディレクトリを作成できませんでした");
         } else {
-            fs::remove_dir_all($path).expect("ディレクトリを削除できませんでした");
+            fs::create_dir_all($path).expect("ディレクトリを作成できませんでした");
         }
     };
 }

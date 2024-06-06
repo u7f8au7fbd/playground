@@ -5,3 +5,5 @@
 ## GoogleURL
 - &start=10 :ページ開始指定
 - &sclient=mobile-gws-wiz-hp :モバイル
+# 研究資料
+アルゴリズムの変動に頑健なSEO対策手法の汎用性に関する一考察

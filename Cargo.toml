@@ -9,9 +9,12 @@ edition = "2021"
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*", futures = ["derive"] }
 #HTTPクライアント
-reqwest = { version = "*", features = ["cookies", "blocking", "http2","json",] }
+select = { version = "*" }
+reqwest = { version = "*", features = ["cookies", "blocking", "http2", "json"] }
 scraper = { version = "*" }
-url = { version = "*" }
+regex = { version = "*" }
+url= { version = "*" }
+hyper = { version = "*", features = ["full"] }
 #非同期処理
 tokio = { version = "*", features = ["full"] }
 #現在時刻の取得
