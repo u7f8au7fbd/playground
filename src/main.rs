@@ -1,3 +1,4 @@
+use std::process::Command;
 #[macro_use]
 mod macros;
 
@@ -10,8 +11,19 @@ fn setup() {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup();
-    let url = "https://www.google.com/search?q=Rust&start=0";
+    reqwest_dl("https://www.google.com/search?q=Rust&start=0","./db/test/test_ps.html").await?;
+    powershell_dl("https://www.google.com/search?q=Rust&start=0","./db/test/test_ps.html").await?;
+    Ok(())
+}
+
+async fn reqwest_dl(url:&str,path:&str)->Result<(), Box<dyn std::error::Error>>{
     let html_data = reqwest::get(url).await?.bytes().await?;
-    std::fs::write("./db/test/test.html", html_data).expect("保存失敗");
+    std::fs::write(path, html_data).expect("保存失敗");
+    Ok(())
+}
+
+
+async fn powershell_dl(url: &str, path: &str)->Result<(), Box<dyn std::error::Error>>{
+
     Ok(())
 }
