@@ -13,7 +13,7 @@ select = { version = "*" }
 reqwest = { version = "*", features = ["cookies", "blocking", "http2", "json"] }
 scraper = { version = "*" }
 regex = { version = "*" }
-url= { version = "*" }
+url = { version = "*" }
 hyper = { version = "*", features = ["full"] }
 #非同期処理
 tokio = { version = "*", features = ["full"] }
@@ -21,7 +21,8 @@ tokio = { version = "*", features = ["full"] }
 chrono = { version = "*" }
 #GUI
 dioxus = { version = "*", features = ["desktop"] }
-
+charming = { version = "*", features = ["ssr"] }
+rand = { version = "0.8.3" }
 [profile.dev]
 opt-level = 1
 [profile.dev.package."*"]
