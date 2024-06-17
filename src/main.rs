@@ -6,72 +6,68 @@ fn setup() {
     cmd!(utf8); // utf-8コマンドを実行する
     cmd!(red_line); // lineコマンドを実行する
 }
-
-use std::error::Error;
-use std::fs::File;
+use reqwest;
+use tokio;
+use select::document::Document;
+use select::predicate::Name;
+use url::Url;
+use std::fs::{self, File};
 use std::io::prelude::*;
 use std::path::Path;
 
-// reqwestクレートとselectクレートを使用してHTMLを解析し、リソースを取得します。
-use reqwest;
-use select::document::Document;
-use select::predicate::Name;
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    setup();
+    // 指定されたURLからHTMLをダウンロード
+    let url = "https://www.rust-lang.org"; // ここにダウンロードしたいWebページのURLを入力
+    let res = reqwest::get(url).await?;
+    let body = res.text().await?;
 
-// 指定されたURLからHTMLをダウンロードし、リソースのURLを抽出します。
-async fn download_resources(url: &str) -> Result<(), Box<dyn Error>> {
-    // HTMLを取得します。
-    let res = reqwest::get(url).await?.text().await?;
+    // HTMLファイルとして保存
+    let html_path = Path::new("index.html");
+    fs::write(html_path, &body)?;
 
-    // ドキュメントを解析します。
-    let document = Document::from(res.as_str());
+    // HTMLを解析してリソースのURLを見つける
+    let document = Document::from(body.as_str());
+    let base_url = Url::parse(url)?;
 
-    // CSSファイルのリンクを抽出します。
+    // CSSファイルのURLを見つけてダウンロード
     for node in document.find(Name("link")) {
         if let Some(href) = node.attr("href") {
             if href.ends_with(".css") {
-                download_file(href).await?;
+                let css_url = base_url.join(href)?;
+                let mut res = reqwest::get(css_url.as_str()).await?;
+                let mut out = File::create(Path::new(href))?;
+                while let Some(chunk) = res.chunk().await? {
+                    out.write_all(&chunk)?;
+                }
             }
         }
     }
 
-    // 画像ファイルのリンクを抽出します。
+    // JavaScriptファイルのURLを見つけてダウンロード
+    for node in document.find(Name("script")) {
+        if let Some(src) = node.attr("src") {
+            let js_url = base_url.join(src)?;
+            let mut res = reqwest::get(js_url.as_str()).await?;
+            let mut out = File::create(Path::new(src))?;
+            while let Some(chunk) = res.chunk().await? {
+                out.write_all(&chunk)?;
+            }
+        }
+    }
+
+    // 画像ファイルのURLを見つけてダウンロード
     for node in document.find(Name("img")) {
         if let Some(src) = node.attr("src") {
-            download_file(src).await?;
+            let img_url = base_url.join(src)?;
+            let mut res = reqwest::get(img_url.as_str()).await?;
+            let mut out = File::create(Path::new(src))?;
+            while let Some(chunk) = res.chunk().await? {
+                out.write_all(&chunk)?;
+            }
         }
     }
 
     Ok(())
-}
-
-// 指定されたURLからファイルをダウンロードし、ローカルに保存します。
-async fn download_file(url: &str) -> Result<(), Box<dyn Error>> {
-    let response = reqwest::get(url).await?;
-
-    // URLからファイル名を抽出します。
-    let filename = Path::new(url)
-        .file_name()
-        .ok_or("Could not extract file name")?
-        .to_str()
-        .ok_or("Could not convert file name to string")?;
-
-    // ファイルを作成します。
-    let mut file = File::create(filename)?;
-
-    // ファイルにコンテンツを書き込みます。
-    let content = response.bytes().await?;
-    file.write_all(&content)?;
-
-    Ok(())
-}
-
-#[tokio::main]
-async fn main() {
-    // ダウンロードしたいWebページのURLを指定します。
-    let url = "https://www.example.com";
-    setup();
-    // リソースをダウンロードします。
-    if let Err(e) = download_resources(url).await {
-        println!("エラーが発生しました: {}", e);
-    }
 }

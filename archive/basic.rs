@@ -7,6 +7,8 @@ fn setup() {
     cmd!(red_line); // lineコマンドを実行する
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup();
+    Ok(())
 }
