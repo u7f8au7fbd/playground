@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 #シリアライズ/デシリアライズ
 serde = { version = "*", features = ["derive"] }
-serde_json = { version = "*", futures = ["derive"] }
+serde_json = { version = "*"}
 #HTTPクライアント
 select = { version = "*" }
 reqwest = { version = "*", features = ["cookies", "blocking", "http2", "json"] }
