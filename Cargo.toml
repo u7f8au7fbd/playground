@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 #シリアライズ/デシリアライズ
 serde = { version = "*", features = ["derive"] }
-serde_json = { version = "*"}
+serde_json = { version = "*" }
 #HTTPクライアント
 select = { version = "*" }
 reqwest = { version = "*", features = ["cookies", "blocking", "http2", "json"] }
@@ -22,7 +22,9 @@ chrono = { version = "*" }
 #GUI
 dioxus = { version = "*", features = ["desktop"] }
 charming = { version = "*", features = ["ssr"] }
-rand = { version = "0.8.3" }
+rand = { version = "*" }
+
+
 [profile.dev]
 opt-level = 1
 [profile.dev.package."*"]
