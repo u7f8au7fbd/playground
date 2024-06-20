@@ -83,7 +83,8 @@ macro_rules! cmd {
     (green_line) => {
         println!(
             "{}----------------------------------------------------------------{}",
-            cmd_color!(green)
+            cmd_color!(green),
+            cmd_color!(reset)
         )
     };
 }
@@ -117,7 +118,7 @@ macro_rules! madogen {
 #[macro_export]
 macro_rules! ini_dir {
     ($path:expr) => {
-        use std::{fs,path};
+        use std::{fs, path};
         let exists = path::Path::new($path).exists();
         if exists {
             fs::remove_dir_all($path).expect("ディレクトリを削除できませんでした");

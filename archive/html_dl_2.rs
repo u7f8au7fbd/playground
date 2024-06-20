@@ -1,7 +1,12 @@
+
 async fn download_html(url: &str, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    use reqwest::Client;
+    use std::process::Command;
+    use std::time::Duration;
+
     // PowerShellでダウンロードする関数
     async fn download_html_ps(url: &str, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let file_path = format!("{}index1.html", path);
+        let file_path = format!("{}index.html", path);
         Command::new("powershell")
             .args([&format!(
                 "Invoke-WebRequest -Uri \"{}\" -OutFile \"{}\"",
@@ -11,7 +16,7 @@ async fn download_html(url: &str, path: &str) -> Result<(), Box<dyn std::error::
         Ok(())
     }
 
-    let file_path = format!("{}index2.html", path);
+    let file_path = format!("{}index.html", path);
     let client = Client::builder().timeout(Duration::from_secs(3)).build()?;
     let response = client.get(url).send().await;
     match response {
