@@ -111,11 +111,6 @@ macro_rules! format_path {
 }
 
 #[macro_export]
-macro_rules! madogen {
-    () => {};
-}
-
-#[macro_export]
 macro_rules! ini_dir {
     ($path:expr) => {
         use std::{fs, path};
@@ -125,6 +120,26 @@ macro_rules! ini_dir {
             fs::create_dir_all($path).expect("ディレクトリを作成できませんでした");
         } else {
             fs::create_dir_all($path).expect("ディレクトリを作成できませんでした");
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! time_count {
+    // このマクロは任意のブロック(`$block`)を受け取ります。
+    ($block:block) => {
+        {
+            cmd!(utf8);
+            // 処理開始前の時刻を記録します。
+            let start = std::time::Instant::now();
+            // ユーザーが提供したコードブロックを実行します。
+            $block
+            // 処理終了後の時刻を記録します。
+            let end = std::time::Instant::now();
+            // 開始時刻と終了時刻の差分（処理時間）を計算します。
+            let duration = end.duration_since(start);
+            // 処理時間を出力します。
+            println!("処理にかかった時間: {:?}", duration.as_secs_f64());
         }
     };
 }

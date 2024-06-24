@@ -21,7 +21,6 @@ chrono = { version = "*" }
 #GUI
 dioxus = { version = "*", features = ["desktop"] }
 charming = { version = "*", features = ["ssr"] }
-rand = { version = "*" }
 
 
 [profile.dev]
