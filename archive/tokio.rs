@@ -32,7 +32,7 @@ async fn process_in_chunks(num_str: Vec<String>, chunk_size: usize) {
             cmd_color!(reset)
         );
         cmd!(green_line); //1チャンクの処理が終わるたびに緑の線を表示する
-        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(4)).await;
     }
 }
 
@@ -40,9 +40,8 @@ async fn process_in_chunks(num_str: Vec<String>, chunk_size: usize) {
 async fn main() {
     setup();
     // `String`のベクターを作成します。
-    let num_str = fill_vec("https://www.google.co.jp/", 1000);
+    let num_str = fill_vec("https://www.google.com/", 5000);
     let chunk_size = 100;
-
     // `Vec<String>`を渡して所有権の問題を回避します。
     process_in_chunks(num_str, chunk_size).await;
 }
@@ -56,7 +55,13 @@ fn fill_vec(string: &str, size: usize) -> Vec<String> {
 }
 
 async fn reqwest_status(url: String) -> Result<(), Box<dyn std::error::Error>> {
-    let status = reqwest::get(url).await?.status();
+    let client = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+        .build()?;
+
+    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+    let response = client.get(&url).send().await?;
+    let status = response.status();
     println!("HTTPSステータス: {}", status);
     Ok(())
 }
