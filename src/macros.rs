@@ -140,6 +140,8 @@ macro_rules! time_count {
             let duration = end.duration_since(start);
             // 処理時間を出力します。
             println!("処理にかかった時間: {:?}", duration.as_secs_f64());
+            let elapsed = duration.as_secs() / 60;
+            println!("経過時間: {}分", elapsed);
         }
     };
 }
