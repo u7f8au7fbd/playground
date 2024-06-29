@@ -57,6 +57,7 @@ fn fill_vec(string: &str, size: usize) -> Vec<String> {
     vec
 }
 
+//クッキーを追加
 async fn reqwest_status(url: String) -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder().build()?;
     let response = client.get(&url)
