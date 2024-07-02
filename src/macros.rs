@@ -87,6 +87,40 @@ macro_rules! cmd {
             cmd_color!(reset)
         )
     };
+    (red_bg) => {
+        let ps_script = r#"
+        $console = $host.UI.RawUI
+        $console.BackgroundColor = 'DarkRed'
+        $colors = $host.PrivateData
+        $colors.VerboseBackgroundColor = 'DarkRed'
+        $colors.WarningBackgroundColor = 'DarkRed'
+        $colors.ErrorBackgroundColor = 'DarkRed'
+        Clear-Host
+    "#;
+
+        std::process::Command::new("powershell")
+            .arg("-Command")
+            .arg(ps_script)
+            .output()
+            .expect("failed to execute powershell command");
+    };
+    (green_bg) => {
+        let ps_script = r#"
+        $console = $host.UI.RawUI
+        $console.BackgroundColor = 'DarkGreen'
+        $colors = $host.PrivateData
+        $colors.VerboseBackgroundColor = 'DarkGreen'
+        $colors.WarningBackgroundColor = 'DarkGreen'
+        $colors.ErrorBackgroundColor = 'DarkGreen'
+        Clear-Host
+    "#;
+
+        std::process::Command::new("powershell")
+            .arg("-Command")
+            .arg(ps_script)
+            .output()
+            .expect("failed to execute powershell command");
+    };
 }
 
 #[macro_export]
