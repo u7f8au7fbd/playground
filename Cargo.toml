@@ -12,15 +12,14 @@ serde_json = { version = "*" }
 select = { version = "*" }
 reqwest = { version = "*", features = ["cookies", "blocking", "http2", "json"] }
 scraper = { version = "*" }
-regex = { version = "*" }
 url = { version = "*" }
 #非同期処理
 tokio = { version = "*", features = ["full"] }
 #現在時刻の取得
-chrono = { version = "*" }
+#chrono = { version = "*" }
 #GUI
 dioxus = { version = "*", features = ["desktop"] }
-charming = { version = "*", features = ["ssr"] }
+#charming = { version = "*", features = ["ssr"] }
 
 
 [profile.dev]
