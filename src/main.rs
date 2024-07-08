@@ -26,7 +26,9 @@ fn read_and_print_json(path: &str) -> Result<(), Box<dyn std::error::Error>> {
                 if let Value::Array(sub_word) = obj["sub_word"].clone() {
                     for word in sub_word {
                         if let Value::String(word) = word {
-                            println!("{}+{}", main_word, word);
+                            let url =
+                                format!("https://www.google.com/search?q={}+{}", main_word, word);
+                            println!("{}", url);
                         }
                     }
                 }
