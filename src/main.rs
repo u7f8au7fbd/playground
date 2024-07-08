@@ -1,5 +1,3 @@
-use serde_json::Value;
-
 #[macro_use]
 mod macros;
 
@@ -12,28 +10,5 @@ fn setup() {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup();
-    let path = "./test.json";
-    read_and_print_json(path)?;
-    Ok(())
-}
-
-fn read_and_print_json(path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let json_str = std::fs::read_to_string(path)?;
-    let json: Value = serde_json::from_str(&json_str)?;
-    if let Value::Array(arr) = json {
-        for obj in arr {
-            if let Value::String(main_word) = obj["main_word"].clone() {
-                if let Value::Array(sub_word) = obj["sub_word"].clone() {
-                    for word in sub_word {
-                        if let Value::String(word) = word {
-                            let url =
-                                format!("https://www.google.com/search?q={}+{}", main_word, word);
-                            println!("{}", url);
-                        }
-                    }
-                }
-            }
-        }
-    }
     Ok(())
 }
