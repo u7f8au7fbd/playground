@@ -18,8 +18,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn read_and_print_json(path: &str) -> Result<Vec<Vec<String>>, Box<dyn std::error::Error>> {
-    let mut list: Vec<Vec<String>> = Vec::new(); //最終的に返す配列を定義
+fn read_and_print_json(path: &str) -> Result<Vec<Vec<Vec<String>>>, Box<dyn std::error::Error>> {
+    let mut list: Vec<Vec<Vec<String>>> = Vec::new(); //最終的に返す配列を定義
 
     let json_str = std::fs::read_to_string(path)?; //jsonを読み込む
 
@@ -32,14 +32,24 @@ fn read_and_print_json(path: &str) -> Result<Vec<Vec<String>>, Box<dyn std::erro
                 // main_wordを取り出す
                 if let Value::Array(sub_word) = obj["sub_word"].clone() {
                     // sub_wordを取り出す
-                    let mut url_list: Vec<String> = Vec::new(); // URLを格納するための配列
+                    let mut url_list: Vec<Vec<String>> = Vec::new(); // URLを格納するための配列
+
                     for word in sub_word {
                         // sub_wordの中身を取り出す
                         if let Value::String(word) = word {
                             // sub_wordの中身がString型だった場合
-                            let url =
-                                format!("https://www.google.com/search?q={}+{}", main_word, word); // URLを生成
-                            url_list.push(url); // URLを配列に格納
+                            let mut page_urls: Vec<String> = Vec::new(); // ページごとのURLを格納するための配列
+                            for page in 0..10 {
+                                // 1ページから10ページまでのURLを生成
+                                let url = format!(
+                                    "https://www.google.com/search?q={}+{}&start={}",
+                                    main_word,
+                                    word,
+                                    page * 10
+                                ); // URLを生成
+                                page_urls.push(url); // ページごとのURLを配列に格納
+                            }
+                            url_list.push(page_urls); // ページごとのURLの配列をurl_listに格納
                         }
                     }
                     list.push(url_list); // URLの配列をlistに格納
