@@ -20,7 +20,7 @@ tokio = { version = "*", features = ["full"] }
 #GUI
 dioxus = { version = "*", features = ["desktop"] }
 #charming = { version = "*", features = ["ssr"] }
-
+wgpu = { version = "*" }
 
 [profile.dev]
 opt-level = 1
