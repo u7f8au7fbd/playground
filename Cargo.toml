@@ -18,9 +18,8 @@ tokio = { version = "*", features = ["full"] }
 #現在時刻の取得
 #chrono = { version = "*" }
 #GUI
-dioxus = { version = "*", features = ["desktop"] }
+#dioxus = { version = "*", features = ["desktop"] }
 #charming = { version = "*", features = ["ssr"] }
-wgpu = { version = "*" }
 
 [profile.dev]
 opt-level = 1
