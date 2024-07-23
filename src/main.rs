@@ -3,7 +3,9 @@ struct QueryData {
     main: String,
     sub: Vec<Vec<String>>,
 }
+
 use serde_json::Value;
+use tokio::task;
 
 #[macro_use]
 mod macros;
@@ -12,21 +14,6 @@ fn setup() {
     cmd!(clear); // clearコマンドを実行する
     cmd!(utf8); // utf-8コマンドを実行する
     cmd!(red_line); // lineコマンドを実行する
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    setup();
-    let path = "./sample.json";
-    let data_list = read_and_print_json(path)?;
-    println!("{:#?}", data_list);
-
-    // Serialize data_list to JSON
-    let json_str = serde_json::to_string_pretty(&data_list)?;
-
-    // Write JSON to output file
-    std::fs::write("output.json", json_str)?;
-    Ok(())
 }
 
 fn read_and_print_json(path: &str) -> Result<Vec<QueryData>, Box<dyn std::error::Error>> {
@@ -73,4 +60,50 @@ fn read_and_print_json(path: &str) -> Result<Vec<QueryData>, Box<dyn std::error:
         }
     }
     Ok(data_list)
+}
+
+//チャンク処理
+async fn process_chunk(chunk: &[Vec<String>]) {
+    let tasks: Vec<_> = chunk
+        .iter()
+        .flat_map(|inner_vec| {
+            inner_vec
+                .iter()
+                .map(|item| {
+                    // 各Stringを並列処理するタスクを生成
+                    let item_clone = item.clone();
+                    task::spawn(async move {
+                        println!("{}", item_clone);
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect();
+
+    // 全てのタスクが完了するのを待機
+    for task in tasks {
+        task.await.unwrap();
+    }
+    println!("チャンクが完了しました。");
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    setup();
+
+    let path = "./sample_base.json";
+    let data_list = read_and_print_json(path)?;
+    for data in &data_list {
+        for chunk in data.sub.chunks(1) {
+            process_chunk(chunk).await;
+        }
+    }
+
+    //Jsonの構造をStringに変換
+    let json_str = serde_json::to_string_pretty(&data_list)?;
+
+    //Jsonをファイルに書き込む
+    std::fs::write("output.json", json_str)?;
+
+    Ok(())
 }
