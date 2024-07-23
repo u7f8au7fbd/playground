@@ -64,6 +64,7 @@ fn read_and_print_json(path: &str) -> Result<Vec<QueryData>, Box<dyn std::error:
 
 //チャンク処理
 async fn process_chunk(chunk: &[Vec<String>]) {
+    let mut counter = 0;
     let tasks: Vec<_> = chunk
         .iter()
         .flat_map(|inner_vec| {
@@ -85,7 +86,15 @@ async fn process_chunk(chunk: &[Vec<String>]) {
     for task in tasks {
         task.await.unwrap();
     }
-    print!("チャンク処理完了");
+
+    counter += 1;
+    print!(
+        "{}{}/{}{}",
+        cmd_color!(green),
+        counter,
+        num_str.len() / chunk_size,
+        cmd_color!(reset)
+    );
     cmd!(green_line); //1チャンクの処理が終わるたびに緑の線を表示する
     tokio::time::sleep(std::time::Duration::from_millis(1760)).await;
 }
