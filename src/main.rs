@@ -64,9 +64,6 @@ fn read_and_print_json(path: &str) -> Result<Vec<QueryData>, Box<dyn std::error:
 
 //チャンク処理
 async fn process_chunk(chunk: &[Vec<String>]) {
-    let total_chunks = chunk.len();
-    let mut completed_chunks = 0;
-
     let tasks: Vec<_> = chunk
         .iter()
         .flat_map(|inner_vec| {
@@ -87,8 +84,6 @@ async fn process_chunk(chunk: &[Vec<String>]) {
     // 全てのタスクが完了するのを待機
     for task in tasks {
         task.await.unwrap();
-        completed_chunks += 1;
-        println!("Chunk progress: {}/{}", completed_chunks, total_chunks);
     }
 
     cmd!(green_line); //1チャンクの処理が終わるたびに緑の線を表示する
@@ -100,10 +95,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup();
 
     let path = "./sample_base.json";
+
     let data_list = read_and_print_json(path)?;
+
+    let total_tasks = data_list.iter().map(|data| data.sub.len()).sum::<usize>(); // 全体のタスク数を計算
+
+    let mut completed_tasks = 0; // 完了したタスク数を初期化
+
     for data in &data_list {
         for chunk in data.sub.chunks(1) {
             process_chunk(chunk).await;
+            completed_tasks += chunk.len(); // 完了したタスク数を更新
+            println!("進行度: {}/{}", completed_tasks, total_tasks); // 進行度を表示
         }
     }
 
