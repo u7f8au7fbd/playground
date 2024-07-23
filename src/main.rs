@@ -84,7 +84,7 @@ async fn process_chunk(chunk: &[Vec<String>]) {
     for task in tasks {
         task.await.unwrap();
     }
-    println!("チャンクが完了しました。");
+    println!("チャンク処理完了");
 }
 
 #[tokio::main]
