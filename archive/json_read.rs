@@ -1,3 +1,8 @@
+#[derive(Debug, serde::Serialize)]
+struct QueryData {
+    main: String,
+    sub: Vec<Vec<String>>,
+}
 use serde_json::Value;
 
 #[macro_use]
@@ -12,14 +17,20 @@ fn setup() {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup();
-    let path = "./test.json";
-    read_and_print_json(path)?;
-    println!("{:#?}", read_and_print_json(path)?);
+    let path = "./sample.json";
+    let data_list = read_and_print_json(path)?;
+    println!("{:#?}", data_list);
+
+    // Serialize data_list to JSON
+    let json_str = serde_json::to_string_pretty(&data_list)?;
+
+    // Write JSON to output file
+    std::fs::write("output.json", json_str)?;
     Ok(())
 }
 
-fn read_and_print_json(path: &str) -> Result<Vec<Vec<Vec<String>>>, Box<dyn std::error::Error>> {
-    let mut list: Vec<Vec<Vec<String>>> = Vec::new(); //最終的に返す配列を定義
+fn read_and_print_json(path: &str) -> Result<Vec<QueryData>, Box<dyn std::error::Error>> {
+    let mut data_list: Vec<QueryData> = Vec::new(); //最終的に返すデータの配列を定義
 
     let json_str = std::fs::read_to_string(path)?; //jsonを読み込む
 
@@ -32,7 +43,7 @@ fn read_and_print_json(path: &str) -> Result<Vec<Vec<Vec<String>>>, Box<dyn std:
                 // main_wordを取り出す
                 if let Value::Array(sub_word) = obj["sub_word"].clone() {
                     // sub_wordを取り出す
-                    let mut url_list: Vec<Vec<String>> = Vec::new(); // URLを格納するための配列
+                    let mut sub: Vec<Vec<String>> = Vec::new(); // Data構造体のdataフィールドに格納するための配列
 
                     for word in sub_word {
                         // sub_wordの中身を取り出す
@@ -49,13 +60,17 @@ fn read_and_print_json(path: &str) -> Result<Vec<Vec<Vec<String>>>, Box<dyn std:
                                 ); // URLを生成
                                 page_urls.push(url); // ページごとのURLを配列に格納
                             }
-                            url_list.push(page_urls); // ページごとのURLの配列をurl_listに格納
+                            sub.push(page_urls); // ページごとのURLの配列をdataに格納
                         }
                     }
-                    list.push(url_list); // URLの配列をlistに格納
+                    let data_entry = QueryData {
+                        main: main_word,
+                        sub,
+                    };
+                    data_list.push(data_entry); // Data構造体をdata_listに格納
                 }
             }
         }
     }
-    Ok(list)
+    Ok(data_list)
 }

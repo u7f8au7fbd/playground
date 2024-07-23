@@ -7,13 +7,8 @@ fn setup() {
     cmd!(red_line); // lineコマンドを実行する
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    setup();
-    Ok(())
-}
-use tokio::task;
 use tokio::runtime::Runtime;
+use tokio::task;
 
 struct Data {
     string: String,
@@ -21,15 +16,21 @@ struct Data {
 }
 
 async fn process_chunk(chunk: &[Vec<String>]) {
-    let tasks: Vec<_> = chunk.iter().flat_map(|inner_vec| {
-        inner_vec.iter().map(|item| {
-            // 各Stringを並列処理するタスクを生成
-            let item_clone = item.clone();
-            task::spawn(async move {
-                println!("{}", item_clone);
-            })
-        }).collect::<Vec<_>>()
-    }).collect();
+    let tasks: Vec<_> = chunk
+        .iter()
+        .flat_map(|inner_vec| {
+            inner_vec
+                .iter()
+                .map(|item| {
+                    // 各Stringを並列処理するタスクを生成
+                    let item_clone = item.clone();
+                    task::spawn(async move {
+                        println!("{}", item_clone);
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect();
 
     // 全てのタスクが完了するのを待機
     for task in tasks {
