@@ -106,7 +106,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         for chunk in data.sub.chunks(1) {
             process_chunk(chunk).await;
             completed_tasks += chunk.len(); // 完了したタスク数を更新
-            println!("進行度: {}/{}", completed_tasks, total_tasks); // 進行度を表示
+            print!("進行度: {}/{}", completed_tasks, total_tasks); // 進行度を表示
         }
     }
 
@@ -120,9 +120,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn reqwest_status(url: String) -> Result<(), Box<dyn std::error::Error>> {
+    let cookie="NID=516=B5sTLD9MmpyVULQJ6AmqbpmxIpfOIvG_APdFtnGFgXa6Z7nrM8V1DZUFnZY85C5I9hSjOM_dZDwluyrFERQSYyYPO9d_s_X9zWBTQfuWJD6H7g1gIFp83j2NorXNlanMaOBwqP5YKK3PeiVcmbJ1ZyUrFEYhbLQZR4EsCE1_yr8t-LhCdw22c7hGE2YbsQ; AEC=AVYB7cp9JojNVxZx59vxpczaCi7I8_Gt4TIQjCPLmcpR92ZIsLUAFlutGO8; OGPC=19037049-1:";
     let client = reqwest::Client::builder().build()?;
     let response = client.get(&url)
-        .header("Cookie", "NID=515=mlGvH_06_7rOahVHX4mfBgoAnHNDr6C9XXyZkmdo2TSczwJSNVkfMoEGboxtcOXyGUo5PWN8L10cPBn2bfQ3uF4xl6D8UTwz8iH3ppGwEaWuNKd9uwVo6MAUkSj9typIaoihflNSuzPa644wg1OufpcGCzzOfWbVzenEHEcYdFZpzeOqJCpOfDefYncaNrsX-l8QJWOTFlw11khb-sNxV1_WasYZJUJAxRuZnwDeNbmnONlWN9W28ZCimS80gcXiAhO5PXjHVxQ530AMNI5L26EZp7L8_TMnIkYLDFh2xzW9v_pKelnxyASOd_lcB2-2jJlKjpwBVgBs2Snr6a1ScO-nGKMAfpt2bWhdSjNvR66d6IVmVBOF23j3AtRg_YNNBBNQUnW6i7aTm_uaZdSCHyq6KSc_mCrk1w--3muMjI9rOnOPnwB_qF-XC-o8EhycXj_J8l5V-jRwSaN2ARNtN1dVRKNLOSJ-9KkY6eF2Grp6oJ_k6Vd3Y7qiCmenxs7_TY7_U0fzn4Vs2YYfp6QQY_POeIkspGNnoUUc0n_oK04dpIp4C3w-ot0lfqUzC1B50RVnUI1a")
+        .header("Cookie", cookie)
         //.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
         .send()
         .await?;
