@@ -20,7 +20,8 @@ chrono = { version = "*" }
 #GUI
 dioxus = { version = "*", features = ["desktop"] }
 charming = { version = "*", features = ["ssr"] }
-
+#その他
+rand="*"
 [profile.dev]
 opt-level = 1
 [profile.dev.package."*"]
