@@ -2,6 +2,10 @@ use rand::Rng;
 use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use std::{thread, time};
+use tokio::task;
+
+#[macro_use]
+mod macros;
 
 fn get_https_status(url: &str) -> Result<reqwest::StatusCode, Box<dyn std::error::Error>> {
     // ユーザーエージェントのリスト
@@ -23,8 +27,8 @@ fn get_https_status(url: &str) -> Result<reqwest::StatusCode, Box<dyn std::error
     headers.insert(USER_AGENT, HeaderValue::from_str(user_agent)?);
 
     // ランダムな待機時間（1～5秒）を設定してリクエストを送信
-    let wait_time = time::Duration::from_secs(rng.gen_range(1, 6));
-    thread::sleep(wait_time);
+    let wait_time = time::Duration::from_secs(rng.gen_range(2, 3));
+    thread::sleep(time::Duration::from_millis(1750));
 
     let response = client.get(url).headers(headers).send()?;
 
@@ -33,11 +37,22 @@ fn get_https_status(url: &str) -> Result<reqwest::StatusCode, Box<dyn std::error
 }
 
 fn main() {
-    let url = "https://www.google.co.jp/search?q=Rust";
-    for _ in 0..1000 {
-        match get_https_status(url) {
-            Ok(status) => println!("HTTP Status: {}", status),
-            Err(e) => eprintln!("Error: {}", e),
+    time_count!({
+        for i in 0..65535 {
+            print!("{}:", i + 1);
+            let url = format!("https://www.google.co.jp/search?q={}&start=0", i);
+
+            match get_https_status(&url) {
+                Ok(status) => {
+                    if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
+                        eprintln!("{}{}{}", cmd_color!(red), status, cmd_color!(reset));
+                        std::process::exit(0);
+                    } else {
+                        println!("{}{}{}", cmd_color!(green), status, cmd_color!(reset));
+                    }
+                }
+                Err(e) => eprintln!("{}{}{}", cmd_color!(red), e, cmd_color!(reset)),
+            }
         }
-    }
+    })
 }
