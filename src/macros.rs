@@ -1,61 +1,5 @@
 //マクロを指定
 #[macro_export]
-
-macro_rules! cmd_color {
-    (black) => {
-        "\x1b[30m"
-    };
-    (red) => {
-        "\x1b[31m"
-    };
-    (green) => {
-        "\x1b[32m"
-    };
-    (yellow) => {
-        "\x1b[33m"
-    };
-    (blue) => {
-        "\x1b[34m"
-    };
-    (magenta) => {
-        "\x1b[35m"
-    };
-    (cyan) => {
-        "\x1b[36m"
-    };
-    (white) => {
-        "\x1b[37m"
-    };
-    (black_b) => {
-        "\x1b[40m"
-    };
-    (red_b) => {
-        "\x1b[41m"
-    };
-    (green_b) => {
-        "\x1b[42m"
-    };
-    (yellow_b) => {
-        "\x1b[43m"
-    };
-    (blue_b) => {
-        "\x1b[44m"
-    };
-    (magenta_b) => {
-        "\x1b[45m"
-    };
-    (cyan_b) => {
-        "\x1b[46m"
-    };
-    (white_b) => {
-        "\x1b[47m"
-    };
-    (reset) => {
-        "\x1b[0m"
-    };
-}
-
-#[macro_export]
 macro_rules! cmd {
     (utf8) => {
         use std::process::Command;
@@ -65,6 +9,7 @@ macro_rules! cmd {
             .expect("UTF-8に設定できませんでした");
     };
     (clear) => {
+        use std::process::Command;
         Command::new("cmd")
             .args(["/C", "cls"])
             .output()
@@ -160,22 +105,118 @@ macro_rules! ini_dir {
 
 #[macro_export]
 macro_rules! time_count {
-    // このマクロは任意のブロック(`$block`)を受け取ります。
     ($block:block) => {
         {
             cmd!(utf8);
             // 処理開始前の時刻を記録します。
             let start = std::time::Instant::now();
-            // ユーザーが提供したコードブロックを実行します。
+            // ユーザーが提供したコードブロックを実行
             $block
             // 処理終了後の時刻を記録します。
             let end = std::time::Instant::now();
-            // 開始時刻と終了時刻の差分（処理時間）を計算します。
+            // 開始時刻と終了時刻の差分（処理時間）を計算
             let duration = end.duration_since(start);
-            // 処理時間を出力します。
+            // 処理時間を出力
             println!("処理にかかった時間: {:?}", duration.as_secs_f64());
             let elapsed = duration.as_secs() / 60;
             println!("経過時間: {}分", elapsed);
         }
+    };
+}
+
+#[macro_export]
+macro_rules! black {
+    ($s:expr) => {
+        format!("\x1b[30m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! red {
+    ($s:expr) => {
+        format!("\x1b[31m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! green {
+    ($s:expr) => {
+        format!("\x1b[32m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! yellow {
+    ($s:expr) => {
+        format!("\x1b[33m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! blue {
+    ($s:expr) => {
+        format!("\x1b[34m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! magenta {
+    ($s:expr) => {
+        format!("\x1b[35m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! cyan {
+    ($s:expr) => {
+        format!("\x1b[36m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! white {
+    ($s:expr) => {
+        format!("\x1b[37m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! black_b {
+    ($s:expr) => {
+        format!("\x1b[40m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! red_b {
+    ($s:expr) => {
+        format!("\x1b[41m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! green_b {
+    ($s:expr) => {
+        format!("\x1b[42m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! yellow_b {
+    ($s:expr) => {
+        format!("\x1b[43m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! blue_b {
+    ($s:expr) => {
+        format!("\x1b[44m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! magenta_b {
+    ($s:expr) => {
+        format!("\x1b[45m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! cyan_b {
+    ($s:expr) => {
+        format!("\x1b[46m{}\x1b[0m", $s)
+    };
+}
+#[macro_export]
+macro_rules! white_b {
+    ($s:expr) => {
+        format!("\x1b[47m{}\x1b[0m", $s)
     };
 }

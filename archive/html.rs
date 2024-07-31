@@ -1,45 +1,59 @@
-use std::process::Command;
+use scraper::{ElementRef, Html, Selector};
+use std::fs;
+
 #[macro_use]
 mod macros;
 
-fn setup() {
-    cmd!(clear); // clearコマンドを実行する
-    cmd!(utf8); // utf-8コマンドを実行する
-    cmd!(red_line); // lineコマンドを実行する
-}
+fn main() {
+    cmd!(clear);
+    // ファイルの内容を読み取る
+    let file_content = fs::read_to_string("./sample/index.html").expect("Failed to read file");
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    setup();
-    reqwest_dl(
-        "https://www.google.com/search?q=Rust&start=0",
-        "./db/test/test_rq.html",
-    )
-    .await?;
-    powershell_dl(
-        "https://www.google.com/search?q=Rust&start=0",
-        "./db/test/test_ps.html",
-    )
-    .await?;
-    Ok(())
-}
+    // HTMLドキュメントを解析する
+    let document = Html::parse_document(&file_content);
 
-async fn reqwest_dl(url: &str, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let html_data = reqwest::get(url).await?.bytes().await?;
-    std::fs::write(path, html_data).expect("保存失敗");
-    Ok(())
-}
+    // 対象とするタグのセレクタを作成する
+    let selectors = vec![
+        ("h1", Selector::parse("h1").unwrap()),
+        ("h2", Selector::parse("h2").unwrap()),
+        ("h3", Selector::parse("h3").unwrap()),
+        ("p", Selector::parse("p").unwrap()),
+        ("a", Selector::parse("a").unwrap()),
+    ];
 
-async fn powershell_dl(url: &str, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    Command::new("powershell")
-        .args([
-            "Invoke-WebRequest",
-            "-Uri",
-            "https://example.com",
-            "-OutFile",
-            "./db/TEST/test_ps.html",
-        ])
-        .output()
-        .expect("コマンド実行中にエラーが発生しました");
-    Ok(())
+    // 要素を保持するためのベクタを初期化する
+    let mut elements: Vec<(String, String)> = Vec::new();
+
+    // ノードのツリー構造を利用して全ての要素を順番に走査
+    for node in document.tree.nodes() {
+        if let Some(element) = ElementRef::wrap(node) {
+            for (tag_name, _) in &selectors {
+                if element.value().name() == *tag_name {
+                    let text = element.text().collect::<String>().trim().to_string();
+                    if !text.is_empty() {
+                        elements.push((tag_name.to_string(), text));
+                    }
+                }
+            }
+        }
+    }
+
+    // 取得した要素を表示する
+    for (tag, text) in elements {
+        if tag == "p" {
+            println!("{}:{}", tag, text);
+        } else if tag == "h1" {
+            println!("{}:{}", yellow!(tag), yellow!(text));
+        } else if tag == "h2" {
+            println!("{}:{}", cyan!(tag), cyan!(text));
+        } else if tag == "h3" {
+            println!("{}:{}", magenta!(tag), magenta!(text));
+        } else if tag == "a" {
+            println!("{}:{}", blue!(tag), blue!(text));
+        }
+    }
+
+    let text = "aaa";
+
+    println!("{}", black!(text));
 }

@@ -8,6 +8,7 @@ edition = "2021"
 #シリアライズ/デシリアライズ
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*" }
+sonic-rs={version = "*"}
 #HTTPクライアント
 select = { version = "*" }
 reqwest = { version = "*", features = ["cookies", "blocking", "http2", "json"] }
@@ -22,6 +23,8 @@ dioxus = { version = "*", features = ["desktop"] }
 charming = { version = "*", features = ["ssr"] }
 #その他
 rand="*"
+#形態素解析・自然言語処理・トークン化
+lindera = { version = "*", features = ["ipadic","filter"] }
 [profile.dev]
 opt-level = 1
 [profile.dev.package."*"]
