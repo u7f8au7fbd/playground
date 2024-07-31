@@ -1,14 +1,12 @@
-use dioxus::html::th;
+#[macro_use]
+mod macros;
+
 use rand::Rng;
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use reqwest::Client;
-use sonic_rs::get;
-use std::{thread, time};
+use scraper::{Html, Selector};
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
-
-#[macro_use]
-mod macros;
 
 const USER_AGENTS_INDEX: [&str; 10] = [
     // Windows用のChromeブラウザ
@@ -33,6 +31,72 @@ const USER_AGENTS_INDEX: [&str; 10] = [
     "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Mobile Safari/537.36"
 ];
 
+fn setup() {
+    cmd!(clear); // clearコマンドを実行する
+    cmd!(utf8); // utf-8コマンドを実行する
+    cmd!(red_line); // lineコマンドを実行する
+}
+
+use tokio::task;
+async fn process_in_chunks(num_str: Vec<String>, chunk_size: usize) {
+    let num_str_with_index: Vec<(usize, String)> = num_str.into_iter().enumerate().collect();
+    let mut counter = 0;
+
+    for chunk in num_str_with_index.chunks(chunk_size) {
+        let mut handles = Vec::new();
+
+        for (index, num) in chunk {
+            let num = num.clone(); // この部分のcloneはやむを得ない
+            let index = *index; // インデックスをコピー
+
+            let handle = task::spawn(async move {
+                download_html(&num, &format!("./test/{}.html", index))
+                    .await
+                    .unwrap();
+            });
+
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.await.unwrap();
+        }
+        counter += 1;
+        print!("{}/{}", counter, num_str_with_index.len() / chunk_size);
+        cmd!(green_line); //1チャンクの処理が終わるたびに緑の線を表示する
+    }
+}
+
+async fn get_query(word: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let url:&str = &format!("https://www.google.com/search?q={}&oq={}&hl=ja&lr=lang_ja&pws=0&sourceid=chrome&ie=UTF-8&num=100&start=0", word,word);
+    let mut urls: Vec<String> = Vec::new();
+    // ランダムなユーザーエージェントを選択
+    let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
+    let mut headers = HeaderMap::new();
+    headers.insert(USER_AGENT, HeaderValue::from_str(user_agent)?);
+    headers.insert("Cookie", HeaderValue::from_str("")?);
+
+    // HTTPクライアントの作成
+    let client = Client::builder().cookie_store(true).build()?;
+    let response = client.get(url).headers(headers).send().await?;
+    let content = response.text().await?;
+
+    // HTMLパース
+    let document = Html::parse_document(&content);
+    let selector = Selector::parse(r#"a[jsname="UWckNb"]"#).unwrap();
+
+    // href属性の抽出と出力
+    for element in document.select(&selector) {
+        if let Some(href) = element.value().attr("href") {
+            urls.push(href.to_string());
+        }
+    }
+
+    println!("URLs: {:#?}", urls);
+    println!("URLs count: {}", urls.len());
+    Ok(urls)
+}
+
 async fn download_html(url: &str, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
     let mut headers = HeaderMap::new();
@@ -55,43 +119,14 @@ async fn download_html(url: &str, file_path: &str) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-async fn get_html_status(url: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
-    let mut headers = HeaderMap::new();
-
-    headers.insert(USER_AGENT, HeaderValue::from_str(user_agent)?);
-    headers.insert("Cookie", HeaderValue::from_str("")?);
-
-    let client = Client::builder().cookie_store(true).build()?;
-    let response = client.get(url).headers(headers).send().await?;
-
-    println!("HTML status: {}", response.status());
-    Ok(())
-}
-
-async fn get_html_content(url: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
-    let mut headers = HeaderMap::new();
-
-    headers.insert(USER_AGENT, HeaderValue::from_str(user_agent)?);
-    headers.insert("Cookie", HeaderValue::from_str("")?);
-
-    let client = Client::builder().cookie_store(true).build()?;
-    let response = client.get(url).headers(headers).send().await?;
-    let content = response.text().await?;
-    println!("HTML content:\n{}", content);
-    Ok(())
-}
 #[tokio::main]
-
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    setup();
+    let word = get_query("Rust").await?;
     time_count!({
-        for i in 0..65535 {
-            println!("{}:", i + 1);
-            let url = format!("https://www.google.co.jp/search?q={}&start=0", i);
-            download_html(&url, &format!("./test/{}.html", i)).await?;
-            thread::sleep(time::Duration::from_millis(2000));
-        }
+        let chunk_size = 10;
+        // `Vec<String>`を渡して所有権の問題を回避します。
+        process_in_chunks(word, chunk_size).await;
     });
     Ok(())
 }

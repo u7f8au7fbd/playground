@@ -1,6 +1,8 @@
 use rand::Rng;
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use reqwest::Client;
+use scraper::{Html, Selector};
+use std::{thread, time};
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
 
@@ -27,7 +29,8 @@ const USER_AGENTS_INDEX: [&str; 10] = [
     "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Mobile Safari/537.36"
 ];
 
-async fn download_html(url: &str, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn download_html(word: &str, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let url:&str = &format!("https://www.google.com/search?q={}&oq={}&hl=ja&lr=lang_ja&pws=0&sourceid=chrome&ie=UTF-8&num=10&start=0", word,word);
     let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
     let mut headers = HeaderMap::new();
 
@@ -49,7 +52,8 @@ async fn download_html(url: &str, file_path: &str) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-async fn get_html_status(url: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn get_html_status(word: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let url:&str = &format!("https://www.google.com/search?q={}&oq={}&hl=ja&lr=lang_ja&pws=0&sourceid=chrome&ie=UTF-8&num=10&start=0", word,word);
     let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
     let mut headers = HeaderMap::new();
 
@@ -63,7 +67,8 @@ async fn get_html_status(url: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn get_html_content(url: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn get_html_content(word: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let url:&str = &format!("https://www.google.com/search?q={}&oq={}&hl=ja&lr=lang_ja&pws=0&sourceid=chrome&ie=UTF-8&num=10&start=0", word,word);
     let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
     let mut headers = HeaderMap::new();
 
@@ -77,10 +82,39 @@ async fn get_html_content(url: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+async fn get_query(word: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let url:&str = &format!("https://www.google.com/search?q={}&oq={}&hl=ja&lr=lang_ja&pws=0&sourceid=chrome&ie=UTF-8&num=10&start=0", word,word);
+    let mut urls: Vec<String> = Vec::new();
+    // ランダムなユーザーエージェントを選択
+    let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
+    let mut headers = HeaderMap::new();
+    headers.insert(USER_AGENT, HeaderValue::from_str(user_agent)?);
+    headers.insert("Cookie", HeaderValue::from_str("")?);
+
+    // HTTPクライアントの作成
+    let client = Client::builder().cookie_store(true).build()?;
+    let response = client.get(url).headers(headers).send().await?;
+    let content = response.text().await?;
+
+    // HTMLパース
+    let document = Html::parse_document(&content);
+    let selector = Selector::parse(r#"a[jsname="UWckNb"]"#).unwrap();
+
+    // href属性の抽出と出力
+    for element in document.select(&selector) {
+        if let Some(href) = element.value().attr("href") {
+            urls.push(href.to_string());
+        }
+    }
+
+    println!("URLs: {:#?}", urls);
+    println!("URLs count: {}", urls.len());
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file_path = "./test/test.html";
-    let url = "https://woman-type.jp/";
-    get_html_status(url).await?;
+    get_query("転職").await?;
     Ok(())
 }
