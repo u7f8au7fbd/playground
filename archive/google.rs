@@ -38,7 +38,7 @@ fn get_https_status(url: &str) -> Result<reqwest::StatusCode, Box<dyn std::error
 
     // ランダムにユーザーエージェントを選択
     let mut rng = rand::thread_rng();
-    let user_agent = user_agents[rng.gen_range(0, user_agents.len())];
+    let user_agent = user_agents[rng.gen_range(0..user_agents.len())];
 
     // HTTPクライアントの作成
     let client = Client::builder()
@@ -49,8 +49,6 @@ fn get_https_status(url: &str) -> Result<reqwest::StatusCode, Box<dyn std::error
     let mut headers = HeaderMap::new();
     headers.insert(USER_AGENT, HeaderValue::from_str(user_agent)?);
 
-    // ランダムな待機時間（1～5秒）を設定してリクエストを送信
-    let wait_time = time::Duration::from_secs(rng.gen_range(2, 3));
     thread::sleep(time::Duration::from_millis(2000));
 
     let response = client.get(url).headers(headers).send()?;
@@ -73,13 +71,13 @@ fn running_task() {
             match get_https_status(&url) {
                 Ok(status) => {
                     if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
-                        eprintln!("{}{}{}", cmd_color!(red), status, cmd_color!(reset));
+                        eprintln!("{}", red!(status));
                         std::process::exit(0);
                     } else {
-                        println!("{}{}{}", cmd_color!(green), status, cmd_color!(reset));
+                        println!("{}", green!(status));
                     }
                 }
-                Err(e) => eprintln!("{}{}{}", cmd_color!(red), e, cmd_color!(reset)),
+                Err(e) => eprintln!("{}", red!(e)),
             }
         }
     })

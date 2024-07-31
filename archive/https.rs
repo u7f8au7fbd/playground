@@ -1,14 +1,8 @@
-use dioxus::html::th;
 use rand::Rng;
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use reqwest::Client;
-use sonic_rs::get;
-use std::{thread, time};
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
-
-#[macro_use]
-mod macros;
 
 const USER_AGENTS_INDEX: [&str; 10] = [
     // Windows用のChromeブラウザ
@@ -82,16 +76,11 @@ async fn get_html_content(url: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("HTML content:\n{}", content);
     Ok(())
 }
-#[tokio::main]
 
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    time_count!({
-        for i in 0..65535 {
-            println!("{}:", i + 1);
-            let url = format!("https://www.google.co.jp/search?q={}&start=0", i);
-            download_html(&url, &format!("./test/{}.html", i)).await?;
-            thread::sleep(time::Duration::from_millis(2000));
-        }
-    });
+    let file_path = "./test/test.html";
+    let url = "https://woman-type.jp/";
+    get_html_status(url).await?;
     Ok(())
 }
