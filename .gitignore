@@ -3,4 +3,5 @@
 /dist/
 /static/
 /.dioxus/
+/db/
 **/*.rs.bk

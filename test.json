@@ -1,0 +1,23 @@
+[
+    {
+        "main_word": "Rust",
+        "sub_word": [
+            "Github",
+            "docs"
+        ]
+    },
+    {
+        "main_word": "Tokio",
+        "sub_word": [
+            "Github",
+            "docs"
+        ]
+    },
+    {
+        "main_word": "Reqwest",
+        "sub_word": [
+            "Github",
+            "docs"
+        ]
+    }
+]

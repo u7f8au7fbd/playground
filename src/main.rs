@@ -1,5 +1,56 @@
+#[derive(Debug, serde::Serialize)]
+struct QueryData {
+    main: String,
+    sub: Vec<String>,
+}
+
 #[macro_use]
 mod macros;
+
+use serde_json::Value;
+use std::{thread, time};
+
+fn setup() {
+    cmd!(clear); // clearコマンドを実行する
+    cmd!(utf8); // utf-8コマンドを実行する
+    cmd!(red_line); // lineコマンドを実行する
+}
+
+fn read_and_print_json(path: &str) -> Result<Vec<QueryData>, Box<dyn std::error::Error>> {
+    let mut data_list: Vec<QueryData> = Vec::new();
+
+    let json_str = std::fs::read_to_string(path)?;
+
+    let json: Value = serde_json::from_str(&json_str)?;
+
+    if let Value::Array(arr) = json {
+        for obj in arr {
+            if let Value::String(main_word) = obj["main_word"].clone() {
+                if let Value::Array(sub_word) = obj["sub_word"].clone() {
+                    let mut sub: Vec<String> = Vec::new();
+
+                    for word in sub_word {
+                        if let Value::String(word) = word {
+                            let url = format!("{}+{}", main_word, word);
+                            sub.push(url);
+                        }
+                    }
+                    let data_entry = QueryData {
+                        main: main_word,
+                        sub,
+                    };
+                    data_list.push(data_entry);
+                }
+            }
+        }
+    }
+    Ok(data_list)
+}
+
+fn get_now_time() -> String {
+    let now = chrono::Local::now();
+    now.format("%Y-%m-%d_%H-%M-%S").to_string()
+}
 
 use rand::Rng;
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
@@ -31,14 +82,10 @@ const USER_AGENTS_INDEX: [&str; 10] = [
     "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Mobile Safari/537.36"
 ];
 
-fn setup() {
-    cmd!(clear); // clearコマンドを実行する
-    cmd!(utf8); // utf-8コマンドを実行する
-    cmd!(red_line); // lineコマンドを実行する
-}
-
+use std::sync::Arc;
 use tokio::task;
-async fn process_in_chunks(num_str: Vec<String>, chunk_size: usize) {
+
+async fn process_in_chunks(num_str: Vec<String>, path: Arc<str>, chunk_size: usize) {
     let num_str_with_index: Vec<(usize, String)> = num_str.into_iter().enumerate().collect();
     let mut counter = 0;
 
@@ -48,9 +95,10 @@ async fn process_in_chunks(num_str: Vec<String>, chunk_size: usize) {
         for (index, num) in chunk {
             let num = num.clone(); // この部分のcloneはやむを得ない
             let index = *index; // インデックスをコピー
+            let path = Arc::clone(&path);
 
             let handle = task::spawn(async move {
-                download_html(&num, &format!("./test/{}.html", index))
+                download_html(&num, &format!("{}/{}.html", &path, index))
                     .await
                     .unwrap();
             });
@@ -68,65 +116,122 @@ async fn process_in_chunks(num_str: Vec<String>, chunk_size: usize) {
 }
 
 async fn get_query(word: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let url:&str = &format!("https://www.google.com/search?q={}&oq={}&hl=ja&lr=lang_ja&pws=0&sourceid=chrome&ie=UTF-8&num=100&start=0", word,word);
-    let mut urls: Vec<String> = Vec::new();
-    // ランダムなユーザーエージェントを選択
-    let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
-    let mut headers = HeaderMap::new();
-    headers.insert(USER_AGENT, HeaderValue::from_str(user_agent)?);
-    headers.insert("Cookie", HeaderValue::from_str("")?);
+    let mut attempt = 0;
+    let max_attempts = 3;
 
-    // HTTPクライアントの作成
-    let client = Client::builder().cookie_store(true).build()?;
-    let response = client.get(url).headers(headers).send().await?;
-    let content = response.text().await?;
+    while attempt < max_attempts {
+        attempt += 1;
+        let url:&str = &format!("https://www.google.com/search?q={}&oq={}&hl=ja&lr=lang_ja&pws=0&sourceid=chrome&ie=UTF-8&num=100&start=0", word, word);
+        let mut urls: Vec<String> = Vec::new();
 
-    // HTMLパース
-    let document = Html::parse_document(&content);
-    let selector = Selector::parse(r#"a[jsname="UWckNb"]"#).unwrap();
+        // ランダムなユーザーエージェントを選択
+        let user_agent =
+            USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
+        let mut headers = HeaderMap::new();
+        headers.insert(USER_AGENT, HeaderValue::from_str(user_agent)?);
+        headers.insert("Cookie", HeaderValue::from_str("")?);
 
-    // href属性の抽出と出力
-    for element in document.select(&selector) {
-        if let Some(href) = element.value().attr("href") {
-            urls.push(href.to_string());
+        // HTTPクライアントの作成
+        let client = Client::builder().cookie_store(true).build()?;
+        let response = client.get(url).headers(headers).send().await?;
+        let content = response.text().await?;
+
+        // HTMLパース
+        let document = Html::parse_document(&content);
+        let selector = Selector::parse(r#"a[jsname="UWckNb"]"#).unwrap();
+
+        // href属性の抽出と出力
+        for element in document.select(&selector) {
+            if let Some(href) = element.value().attr("href") {
+                urls.push(href.to_string());
+            }
         }
+
+        println!("Attempt {}: URLs count: {}", attempt, urls.len());
+
+        if !urls.is_empty() {
+            return Ok(urls);
+        }
+
+        // 再試行する前に少し待つ
+        thread::sleep(time::Duration::from_secs(2));
     }
 
-    println!("URLs: {:#?}", urls);
-    println!("URLs count: {}", urls.len());
-    Ok(urls)
+    Err("データの取得に失敗".into())
 }
 
 async fn download_html(url: &str, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // ユーザーエージェントの配列からランダムに1つを選ぶ
     let user_agent = USER_AGENTS_INDEX[rand::thread_rng().gen_range(0..USER_AGENTS_INDEX.len())];
     let mut headers = HeaderMap::new();
 
+    // ヘッダーにユーザーエージェントを追加
     headers.insert(USER_AGENT, HeaderValue::from_str(user_agent)?);
+    // ヘッダーに空のクッキーを追加
     headers.insert("Cookie", HeaderValue::from_str("")?);
 
+    // クッキーをサポートするクライアントをビルド
     let client = Client::builder().cookie_store(true).build()?;
-    let response = client.get(url).headers(headers).send().await?;
 
-    let mut file = OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .open(file_path)
-        .await?;
+    // エラーハンドリングのためにマッチ式を使用
+    match client.get(url).headers(headers).send().await {
+        Ok(response) => {
+            // 指定されたファイルパスにファイルを作成または開く
+            let mut file = OpenOptions::new()
+                .create(true) // ファイルが存在しない場合は作成
+                .write(true) // 書き込みモードで開く
+                .truncate(true) // ファイルの内容を消去
+                .open(file_path)
+                .await?;
 
-    let content = response.text().await?;
-    file.write_all(content.as_bytes()).await?;
+            // レスポンスの内容をテキストとして取得
+            let content = response.text().await?;
+            // ファイルに書き込む
+            file.write_all(content.as_bytes()).await?;
+        }
+        Err(e) => {
+            // エラーが発生した場合はエラーメッセージとURLを表示
+            println!("Failed to download {}: {}", url, e);
+        }
+    }
+
     Ok(())
 }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup();
-    let word = get_query("Rust").await?;
-    time_count!({
-        let chunk_size = 10;
-        // `Vec<String>`を渡して所有権の問題を回避します。
-        process_in_chunks(word, chunk_size).await;
-    });
+    let path = "./test.json";
+    let data_list = read_and_print_json(path)?;
+    println!("{:#?}", data_list);
+
+    // Create a directory
+    let dir = format!("./db/{}", get_now_time());
+    println!("{}: Finished", get_now_time());
+    std::fs::create_dir_all(&dir)?;
+
+    for data in &data_list {
+        println!("{}", data.main);
+        std::fs::create_dir_all(format!("{}/{}", &dir, data.main))?;
+        for sub in &data.sub {
+            println!("{}", sub);
+            std::fs::create_dir_all(format!("{}/{}/{}", &dir, data.main, sub))?;
+            thread::sleep(time::Duration::from_secs(2));
+            let word = get_query(sub).await?;
+            let chunk_size = 100;
+            // `Vec<String>`を渡して所有権の問題を回避します。
+            process_in_chunks(
+                word,
+                format!("{}/{}/{}", &dir, data.main, sub).into(),
+                chunk_size,
+            )
+            .await;
+        }
+    }
+
+    // Serialize data_list to JSON
+    let json_str = serde_json::to_string_pretty(&data_list)?;
+    // Write JSON to output file
+    std::fs::write(format!("{}/log.json", &dir), json_str)?;
     Ok(())
 }
