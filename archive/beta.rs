@@ -149,9 +149,9 @@ async fn get_query(word: &str) -> Result<Vec<String>, Box<dyn std::error::Error>
         }
 
         // 再試行する前に少し待つ
-        let wait_time = rand::thread_rng().gen_range(40..80);
-        println!("Wait:{}", wait_time);
-        tokio::time::sleep(time::Duration::from_secs(wait_time)).await;
+        thread::sleep(time::Duration::from_secs(
+            rand::thread_rng().gen_range(30..60),
+        ));
     }
 
     Err("データの取得に失敗".into())
@@ -211,12 +211,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("{}", data.main);
         std::fs::create_dir_all(format!("{}/{}", &dir, data.main))?;
         for sub in &data.sub {
-            let wait_time = rand::thread_rng().gen_range(40..80);
-            println!("Wait:{}", wait_time);
-            tokio::time::sleep(time::Duration::from_secs(wait_time)).await;
-
             println!("{}", sub);
             std::fs::create_dir_all(format!("{}/{}/{}", &dir, data.main, sub))?;
+            thread::sleep(time::Duration::from_secs(30));
             let word = get_query(sub).await?;
             let chunk_size = 100;
             // `Vec<String>`を渡して所有権の問題を回避します。
